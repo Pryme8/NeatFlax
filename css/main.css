@@ -85,7 +85,44 @@ html, html *, body, body *, *::before, *::after{
 hr{
 	color:#64BE63;
 }
+
+.top-menu{
+	display:block;
+	position:absolute;
+	top:1em;
+	right:2em;
+	z-index:1000;
+}
+
+.h-menu{
+	position:relative;
+	display:block;
+	margin:0;padding:0;
+	width:auto;
+	height:auto;
+}
+
+.h-menu > span{
+	display:inline-block;
+	margin:0;padding:0;
+	vertical-align:middle;
+}
+
+.h-menu > span.item a{
+	margin:0.5em 0;
+	padding:0.5em 0.35em;
+	font-size:26px;
 	
+}
+
+a{
+color:#2CA84A;
+text-decoration:none;
+}
+
+a:hover{
+color:#64BE63;
+}
 	
 	
 	
