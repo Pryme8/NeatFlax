@@ -14,6 +14,7 @@ Entity = function(id, pos){ //pos is an array(3) with [x,y,angle];
       this.id = id;
       this.pos = pos;
 	  this.velocity = [0,0,0]; // X,Y,ROTATION
+	  this.mass = this.mass || 0;
 	  
 }
 
@@ -35,6 +36,7 @@ Ball = function(id, pos) {
 		  type:'circle',
 	  	  radius : SCALE,	
 	  }
+	  this.mass = 1;
 }
 
 Ball.prototype = new Entity();
@@ -59,6 +61,7 @@ player = function(id, pos) {
 		  [(10 * SCALE)*0.5, SCALE*0.5] //BR
 		  ]	
 	  }
+	  this.mass = 0;
       Entity.call(this, id, pos);
 }
     player.prototype = new Entity();
@@ -75,7 +78,7 @@ player = function(id, pos) {
 pong = {
 	ent_stack : [],
 	gravity : [0,0.2],
-	_init : null		
+	_init : null,
 }
 
 
@@ -108,22 +111,44 @@ window.onload = function() {
 	
 	
 	if (window.Worker) {
-		console.log("Worker Go!");
- 		var newWorker = new Worker("./js/worker1.js");
 		
-  			newWorker.postMessage(['init']);
-			
-  			/*newWorker.onmessage = function(e) {
+		worker = new Worker("./js/worker1.js");
+		worker.postMessage(['init', 0, pong.gravity]);
+
+		
+		function addObj(obj, stackID){
+			worker.postMessage(['AddObj',
+			{
+				id : obj.id,
+				body : obj.body,
+				mass : obj.mass,
+				intVel : obj.velocity,
+				intPos : obj.pos,
+				stackID : stackID,
+				on : true				
+			}
+			]);
+	
+		}
+		
+				
+		
+		for(var i = 0; i < pong.ent_stack.length; i++){
+			addObj(pong.ent_stack[i], i);	
+		}
+		
+  			worker.onmessage = function(e) {
   				var result = e.data;
-  				if(result[0]=='update'){
-				
+  				if(result[0]=='apply'){
+					var calc = result[1];
+					pong.ent_stack[calc.stackID].velocity = calc.newVel;
+					pong.ent_stack[calc.stackID].pos = calc.newPos;
 				}
-				
-			}*/
+			}
 			
-			setInterval(function(){
+			pong._init = setInterval(function(){
       		ctx.clearRect(0, 0, cvas.width, cvas.height);
-      		reDraw();   
+			reDraw();   
     		},1000/30);
 
 	}else{

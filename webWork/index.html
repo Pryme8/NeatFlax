@@ -358,6 +358,257 @@ window.onload = function() {
 <p>Next we define our basic Entity Object, and its prototypes.  This will be the basic container for whatever other objects we want to render on the screen.  We give the Entity Object a draw prototype that should give us a center point.  If you want to use the center point you must make sure that if your not spawning whatever entity at the center of the canvas, you need to translate the context prior to the output otherwise the dot will not be on the center of the new entity (not important we only using it on the ball which spawns in the center).  </p>
 <p>Then we define different Constructors for the Entity Object so that we can call different shapes.  This is a very basic prototype/constructor layout and should be fairly straightforward to understand.  After we have our Constructors ready we need to define a global container for everything.  In this global container "pong", we can define some constants as well.  Once the DOM has loaded, we create the new entities and push them to a stack on our global container.  Modify our all so important resize function, and then create a new function to call the draw method on all active entities.  You could at this point put and enabled disabled flag on the Entities to toggle them on or off, but we'll save that for later.</p>
 <p>If in your interval loop, we stick the argument pong.ent_stack[0].pos[1]+= 0.25; You will see the ball move, which means we are on the right track.</p>
+<p>After some more changes to the main script, we go back to the worker1.js, it is here that we start defining the structure for these workers to do physics calculations and post updates back to the main thread.  We might as well take advantage of the number of threads available to us, and future proof a little bit with a navagator function that might not be supported in all browsers so we have a fall back.</p>
+<pre title='worker1.js'><xmp>// Step 3
+engine = null;
+onmessage = function(e) {
+var type = null;
+  if(e.data.length){
+  	type = e.data[0];
+  }
+	switch(type){
+	case "init" :  engine = new physics(e.data);
+	break;
+	}
+}
+
+physics = function(data){
+	this._core = data[1];
+	this.gravity = data[2];
+	this.stack = [];
+	var parent = this;
+	this._init = setInterval(function(){parent._run()},1000/30);
+}
+
+physics.prototype._run = function(){
+	console.log("Worker on Thread "+this._core+" Fired!");
+
+};</xmp></pre>
+<p>We also need to make some changes on the main.js file to accomidate the thread structure.</p>
+<pre title='main.js'><xmp>...
+pong = {
+	ent_stack : [],
+	gravity : [0,0.2],
+	_init : null,
+	cores : navigator.hardwareConcurrency || 4,		
+}
+...
+	if (window.Worker) {
+		
+		workers = new Array(pong.cores);
+		wID = 0;
+		for(c=0; c<pong.cores; c++){
+			workers[c] = new Worker("./js/worker1.js");
+			workers[c].postMessage(['init', c, pong.gravity]);
+		}
+		
+  			/*newWorker.onmessage = function(e) {
+  				var result = e.data;
+  				if(result[0]=='update'){
+				}
+			}*/
+			
+			pong._init = setInterval(function(){
+      		ctx.clearRect(0, 0, cvas.width, cvas.height);
+      		reDraw();   
+    		},1000/30);
+....
+</xmp></pre>
+<p>If when you run the page and look at your console, you should see all the threads sending out information to the console!  So now that we have our threads firing, and creating a new function called physics, its time to pass some Entites to the now unbuilt physics engine.</p>
+<h3>Part 3.2 - Physics B***h!</h3>
+<p>So how are we gonna handle this?  Why dont we just use some other library?  Why have you not used jQuery yet?  Yeah well... the whole point of this is to expand your and my know how and just deploying a library is easy.  Plus how much better are you going to be at your favorite engine if you understand some of the basic components?</p>
+<p>Right away, we are only dealing with 2 dimensions so the natural inclination would be to go with a Array(2), and prototype some functions into the Array Object, but why not tailor things for what we are doing.  So instead lets do an Array(3) with it representing [POSX, POSY, ROTATION], the same concept then can be used for the velocity vector.  We would need a few things to happen for the engine to actually work:</p>
+<ol>
+<li>Check state of Object, if it turned off even in the stack ignore calculations on it.</li>
+<li>Apply Gravity to velocitys, with account for an objects mass.</li>
+<li>Apply any resctrictions</li>
+<li>Pre Check for Hits</li>
+<li>If its going to hit restrict the objects position to the point of impact and do inertia return calculations</li>
+<li>Convert Velocites to Units of messure of some kind</li>
+<li>Send Message back to main thread.</li>
+</ol>
+<p>Now as I was doing this, I got all the way to having the objects pushed to their thread, then I realized... there would be no way to actually hit test each object because simply enough there is no effective way to communicate between threads.  Now there are shared workers but thats a whole other monster we will try to tackle at some other point.  So instead of bogging you down with the script that does not work we will move right on to a single sub thread model.</p>
+<pre title='worker1.js'><xmp>// Step 3
+var engine = null; //Does not need to be global.
+onmessage = function(e) {
+var type = null;
+  if(e.data.length){
+  	type = e.data[0];
+  }
+	switch(type){
+	case "init" :  engine = new physics(e.data);
+	break;
+	case "AddObj" : engine._addObject(e.data[1]);
+	break;
+	}
+}
+
+physics = function(data){
+	console.log("TREAD "+data[1]+" STARTED!");
+	this._core = data[1];
+	this.gravity = data[2];
+	this.stack = [];
+	var parent = this;
+	this._init = setInterval(function(){parent._run()},1000/30);
+}
+
+physics.prototype._run = function(){
+	for(e=0; e<this.stack.length; e++){	
+		if(!this.stack[e].on){continue}
+		
+		var tempCalc = this._calc(this.stack[e]);
+		
+		/*
+		var hit = false;
+		for(h=e+1; e< this.stack.length; h++){
+		if(!this.stack[h].on){continue}
+		if(hit){return}
+			if(physics._hitTest(e,h)){
+			
+			}else{
+			continue	
+			}
+		}
+		*/
+		this._apply(tempCalc, e);
+		
+	}
+	
+
+};
+
+physics.prototype._addObject = function(obj){
+	obj.pos = obj.intPos, obj.velocity = obj.intVel;
+	this.stack.push(obj);
+	console.log("Thread "+this._core+": Added Obj - "+obj.id+" to its stack");
+}
+
+physics.prototype._hitTest = function(a,b){
+
+return false;
+}
+
+physics.prototype._calc = function(obj){
+		
+	var response = {
+		stackID : obj.stackID,
+	};
+	response.newVel = [
+		obj.velocity[0] + (obj.mass * this.gravity[0]), //X
+		obj.velocity[1] + (obj.mass * this.gravity[1]), //Y
+		obj.velocity[2]	// ROTATION
+	]
+	response.newPos = [
+		obj.pos[0] + response.newVel[0], //X
+		obj.pos[1] + response.newVel[1], //Y
+		obj.pos[2]	//ROTATION
+	]
+	
+	//console.log(response);
+	return response;
+}
+
+physics.prototype._apply = function(calc, id){
+	this.stack[id].pos = calc.newPos;
+	this.stack[id].velocity = calc.newVel;
+	postMessage(['apply',calc]);
+}</xmp></pre>
+<p>With these changes to the worker script, we have enabled the ability to start calculating basic physics into our scene.  To enable it we need to modify the main script now.  We can get rid of the thread count on the pong object as we are going with a single sub thread now, and then we have to change our script around to be a single worker instead of the 4 we had set up.</p>
+
+<pre title='worker1.js'><xmp>...
+if (window.Worker) {
+		
+		worker = new Worker("./js/worker1.js");
+		worker.postMessage(['init', 0, pong.gravity]);
+
+		
+		function addObj(obj, stackID){
+			worker.postMessage(['AddObj',
+			{
+				id : obj.id,
+				body : obj.body,
+				mass : obj.mass,
+				intVel : obj.velocity,
+				intPos : obj.pos,
+				stackID : stackID,
+				on : true				
+			}
+			]);
+	
+		}
+		
+				
+		
+		for(var i = 0; i < pong.ent_stack.length; i++){
+			addObj(pong.ent_stack[i], i);	
+		}
+		
+  			worker.onmessage = function(e) {
+  				var result = e.data;
+  				if(result[0]=='apply'){
+					var calc = result[1];
+					pong.ent_stack[calc.stackID].velocity = calc.newVel;
+					pong.ent_stack[calc.stackID].pos = calc.newPos;
+				}
+			}
+			
+			pong._init = setInterval(function(){
+      		ctx.clearRect(0, 0, cvas.width, cvas.height);
+			reDraw();   
+    		},1000/30);
+...</xmp></pre>
+<p>If your following along and have everything set up correct, when you refresh the page the ball should now drop like graviity is being applied to it.  This set the stage for us to start making some more dynamic effects,  the things we have to consider now is how we are going to handle our Collison detetions.  The most simple model will be for us to use a projection and impulse system where we test if our object is going to collide find out the position where this is happening and then modify our velocity and position to stop the objects from penitrating.  We will keep the model simple, but will include things like restitution and friction.</p>
+<p>How does one actually do a collision test?  Well in concept it is easy, first you have to establish what kind of collisons you need to calculate for, are they simple shapes like rectangles and cirlces only?  Are the axes of the rectangles always the same?  What kind of shapes we need to test will decide our approch.  For this model we need to track at least circles and off axis rectangles.  I want to include off angle rectangles even though the paddle will never change its angle, because there may be a reason to place other objects in the scene that do not have flat axial value.  Oh man, I just realized how quickly this is becoming a math lesson... my bad, anyways to achive our goals lets first go over some vocabulary.  Also for these examples I am writing them out for any length vector, which is useful in normal situations but with how we are storing our stuff it might not be the best idea.  So I have one of two options, pass more variables that are standard vec2's and numbers instead of our vec3 that has rotation with it as well, or redo these functions to only handle 2 units of the vector we hand it.  The smartest I think would be to follow convention, and drop the vec3 that we were using and have a seperate value for the rotation so that way when we do our vector calculations they are correct.</p>
+<ul>
+<li id='normalization'><h3>normalization</h3><div>Normalizing a vector is scaling it so that its length totals 1. To normalize the vector, we divide each of its components by the length of the vector: </div>
+<div>
+<pre title='normalize function'><xmp>function normalize(vec){
+var l=0;
+for(var i = 0; i < vec.length; i++){
+l+= (vec[i]*vec[i]);
+}
+l = Math.sqrt(l);
+for(var i = 0; i < vec.length; i++){
+vec[i]/=l;
+}
+return vec
+}</xmp></pre>
+</div>
+</li>
+<li id='dot'><h3>dot product</h3><div>Think of it as the relative orientation of a and b. With a negative dot product a and b point away from each other; a positive dot product means they point in the same direction.  </div>
+<div>
+<pre title='dot function'><xmp>function dot(a, b){
+var t = 0;
+for(var i=0; i < vec.length; i++){
+	t += (a[i]*b[i]);
+}
+return t;
+}</xmp></pre>
+</div>
+</li>
+
+
+<li id='projection'><h3>Projection</h3><div>A formula to find the shortest length vector that an object must travel to be out of the collision and using this to detect if a object is collided or not.</div>
+<div>
+<pre title='projection function'><xmp>function project(a, b){
+var proj = new Array(a.length);
+var  bt = 0;
+for(var i = 0; i < a.length; i++){
+bt+= (b[i]*b[i]);
+}
+for(var i = 0; i < a.length; i++){
+proj[i] = (dot(a,b)/bt)*b[i];
+}
+
+return proj
+}</xmp></pre>
+</div>
+</li>
+
+</ul>
+
+
+
 </div>
 
 
