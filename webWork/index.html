@@ -605,7 +605,17 @@ return proj
 </div>
 </li>
 
+<li id='perproduct'><h3>Perpedicular Product</h3><div>How to return the vector perpendicular to the input. Every 2D vector has two normals: the right hand and left hand normal. The right hand normal points to the right of the vector, and the left hand normal points to the left. </div>
+<div>
+<pre title='perproduct function'><xmp>function perproduct(vec2){
+var rN = [-vec2[1], vec2[0]];
+var lN = [vec3[1], -vec2[0]];
+return dot(rN,lN);
+}</xmp></pre>
+</div>
+</li>
 </ul>
+<p>With these basic functions we are going to be able to run a whole array of 2d comparisons.</p>
 
 
 

@@ -149,7 +149,7 @@ window.onload = function() {
 			pong._init = setInterval(function(){
       		ctx.clearRect(0, 0, cvas.width, cvas.height);
 			reDraw();   
-    		},1000/30);
+    		},1000/60);
 
 	}else{
  		document.body.innerHTML = "Lame sauce... no Web Workers...";
