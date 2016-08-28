@@ -40,7 +40,7 @@
    </div>
    <p>Ok, so this sounds really promising!  What I am getting out of this is that Web Workers can simulate multithreading and could also serve as a pseudo response server for more dynamic content.</p>
    <p>Also the thought of nesting certain calculation functions inside another script could allow more dynamic animations on a canvas element, or any other intensive calculation.
-   A few points about scope, if we create a web worker thread it creates a new thread outside of the scope of the window.  If at any time we would need to refer to the 'window' that called the worker thread we would instead of using <b>window</b> use <b>self</b>.</p>
+   A few points about scope, if we create a web worker thread it creates a new thread outside of the scope of the window.  If at any time we would need to refer to the 'window' that called the worker thread we would instead of using <b>window</b> use <b>self</b>. *dont quote me on this part</p>
   <p>Other Key Points:
   <ul>
   <li>A dedicated worker is only accessible from the script that first spawned it, whereas shared workers can be accessed from multiple scripts.</li>
@@ -428,7 +428,7 @@ pong = {
 <li>Convert Velocites to Units of messure of some kind</li>
 <li>Send Message back to main thread.</li>
 </ol>
-<p>Now as I was doing this, I got all the way to having the objects pushed to their thread, then I realized... there would be no way to actually hit test each object because simply enough there is no effective way to communicate between threads.  Now there are shared workers but thats a whole other monster we will try to tackle at some other point.  So instead of bogging you down with the script that does not work we will move right on to a single sub thread model.</p>
+<p>Now as I was doing this, I got all the way to having the objects pushed to their thread, then I realized... there would be no way to actually do a hit test on any object because simply enough there is no effective way to communicate between threads.  Now there are shared workers but thats a whole other monster we will try to tackle at some other point.  So instead of bogging you down with the script that does not work we will move right on to a single sub thread model.</p>
 <pre title='worker1.js'><xmp>// Step 3
 var engine = null; //Does not need to be global.
 onmessage = function(e) {
@@ -619,19 +619,34 @@ return dot(rN,lN);
 </div>
 </li>
 </ul>
-<p>With these basic functions we are going to be able to run a whole array of 2d comparisons. So to solve our 2D overlap test using a series of One Dimensonal Tests. each query tests if the two shapes overlap along a given axis. If one of the Axes we test fails then we know that the objects are not intersecting, and we can stop our test to save on overhead.  If we run a test and find that the objects overlap along all of the possible axes, they are definitely overlapping each other.  From this point we need to figure out the projection vector, which we will use to seperate the objects. </p>
+<p>With these basic functions we are going to be able to run a whole array of 2d comparisons. So to solve our 2D overlap test using a series of One Dimensonal Tests. Each query tests if the two shapes overlap along a given axis. If one of the Axes we test fails then we know that the objects are not intersecting, and we can stop our test to save on overhead.  If we run a test and find that the objects overlap along all of the possible axes, they are definitely overlapping each other.  From this point we need to figure out the projection vector, which we will use to seperate the objects. </p>
 <p>The last step would be to find which axis has the smallest amount of overlap between the two objects.  The "Push" we are looking for or the projection vector is the same as the axis direction with the length of the projection vector equal to the size of the overlap.  To acomplish this we need to know first the position of the object and all of its axes, along with our target object and the same.  But Wait? What about circles, or triangles or or... ok fine lets do some drawings.</p>
+<BR />
 <h3>Separating Axis Theorem</h3>
 <p><img style="float: right; margin: 0px 0px 15px 15px;" src="./imgs/e1.jpg" />
-In 2D games to represent moving objects we make an axis-aligned bounding box, or AABB. An AABB is defined by a position and two vectors xw and yw that represent half width of the object.  The concept is the same as testing the radius of circle, but these are aligned to the world axis and are then defined in a specific direction.
+In 2D games to represent moving objects we make an axis-aligned bounding box, or AABB. An AABB is defined by a position and two vectors xw and yw that represent half widths of the object.  The concept is the same as testing the radius of circle, but these are aligned to the world axis and are then defined in a specific direction and distance.
 Well that all sounds cool... but how does it work?  I think maybe the simplest way will be to make a real quick mock up canvas for you.  After the first example, we will go over more shapes and the methods for testing them.  I know this was supposed to be a webworker tutorial, but for real though we need something decently intensive to even have a nessesity for them.  Collision testing I think meets that bill, so please stay with me or skip ahead.
 <br style="clear: both;" /></p>
 
 <p>In the next example what we will see happen when you click run, is the red box should move to the right and once it collides with the other box well start it all over.</p>     
  <canvas id='hit-example-1' width='960px' height="200px" style="background:white"></canvas>  
- <center><a href='#' onclick="start_E1();">RUN!</a></center>
- <script>
+ <center><a href='#' onclick="start_E1();">START/STOP</a></center>
+<p>This is a SUPER simplified model, which works only if the two objects faces are perfectly aligned and thats something that is kinda weak for what we are looking to do.  So what happens when its a polygonal shape or a off angle square?  Back to the drawing boards.</p>     
+<BR />
+<p><img style="float: right; margin: 0px 0px 15px 15px;" src="./imgs/e2.jpg" />
+This is where the method for seaperating axes comes into play.  If you look at our diagram on the right you will see two polygons.  Both of these shapes are called as <b>Convex</b> Shapes.  A Convex shape is any polygon that can be defined by a set of points, that if you were to draw a straight line anywhere on the shape from one point to anouther on the polygon, the line will never travel outside of the shape. Anyways these two Convex polygons are in a non intersecting state.
+<BR /><BR />The value for the seperation is positive and so we know that the shapes are not touching, if it was negitive the shapes would be overlapping and if it was 0 the shapes are just touching.  With this kind of hit detection there would be three kinds of possible contact, edge to edge, vertex to edge, and vertex to vertex.  If we were to draw a line between the two polygons and we pretend the seperation line continues to infinity and we draw a line perpedicular to this line, that is our speration axis.
+Anouther thing we need to start identifying is the "normal" angle of and edge.  This is not to be confused with our normalization meathod discussed earlier, but is a way to establish heading of our edge.  When we define our shapes, we need to follow a convention that assumes the shapes points are orderd on a clockwise direction, this is so when we loop through our edges it stays consitant on the output no matter the shape.  You could proccess the shapes counter-clockwise but this would effectivly reverse your edge normals. 
+<br style="clear: both;" /></p>  
+<p><canvas id='edge-norms' width='600px' height="600px" style="background:white; float: right; margin: 0px 0px 15px 15px;"></canvas>
+I think the easist way to visualize all this is to make some more diagrams... lets see if I can mock up some canvas elements to demonstrate.
+If you look at the diagram on the right, you will see a Convex Polygon with its center point represented by the black dot.  The red dots are the points of the polygon, the green are the edges and the blue arrows are the normal vector or perpendicular axis to the face.  If you drag one of the polygons you will see that the normal for that face changes.
+<br style="clear: both;" />
+</p>
+<script>
 window.onload = function(){
+//EXAMPLE 1
+
  var b1 = {
  	pos : [50,100],
 	size : [100,100]
@@ -682,19 +697,159 @@ function run_E1(){
 	ctxE1.fillRect(b2.pos[0]-(b2.size[0]*0.5),b2.pos[1]-(b2.size[1]*0.5),b2.size[0],b2.size[1]);
 }
 
+//EXAMPLE2
 
 
-}
+	cE2 = document.getElementById('edge-norms'); //Lets make it Global ^_^
+	var ctxE2 = cE2.getContext('2d');
+	var center = [cE2.width*0.5,cE2.height*0.5];
+	var points = [
+	[-150,-125],
+	[120,-190],
+	[180, 0],
+	[140, 180],
+	[0, 190],
+	[-150,-125]
+	]
+	
+	
+
+	
+		function perp(a,b){
+		
+		var o = [(a[0]+b[0])/2, (a[1]+b[1])/2]
+		var ABx =  b[0] - a[0];
+		var ABy =  b[1] - a[1];
+		var ABLength = Math.sqrt( ABx*ABx + ABy*ABy );
+
+		var NABx = ABx / ABLength;
+		var NABy = ABy / ABLength;
+		// Perpendicular + normalized vector.
+		var PNABx = NABy ;
+		var PNABy = -NABx ;
+		
+		var Dx = o[0] + 50 * PNABx;
+		var Dy = o[1] + 50 * PNABy;
+		
+		var capSx = o[0] + 40 * PNABx;
+		var capSy = o[1] + 40 * PNABy;
+		
+		var capO = [Dx, Dy];
+		var capP1 = [o[0] - Dx , o[1]- Dy];
+		var capLength = Math.sqrt( capP1[0]*capP1[0] + capP1[1]*capP1[1] );
+		var nCapX = capP1[0] / capLength;
+		var nCapY = capP1[1] / capLength;
+		var leftCap = [nCapY , -nCapX];
+		var rightCap = [-nCapY , nCapX];
+		capP1 = [capSx + 15 * leftCap[0],
+				 capSy + 15 * leftCap[1]];
+		capP2 = [capSx + 15 * rightCap[0],
+				 capSy + 15 * rightCap[1]];
+				 
+		
+
+
+		return [ o[0], o[1], Dx, Dy, capP1[0], capP1[1], capP2[0], capP2[1] ]; 
+		
+	
+
+		}
+	function e2Draw(){	
+	ctxE2.clearRect(0, 0, cE2.width, cE2.height);
+	//Draw Lines;
+	ctxE2.strokeStyle = 'green';
+	ctxE2.beginPath();
+	ctxE2.moveTo(points[0][0]+center[0],points[0][1]+center[1]);
+	for(var i=1; i<points.length; i++){
+	ctxE2.lineTo(points[i][0]+center[0],points[i][1]+center[1]);
+	}	
+	ctxE2.stroke();
+	
+	ctxE2.fillStyle = 'red';
+	for(var i=0; i<points.length; i++){
+      ctxE2.beginPath();
+      ctxE2.arc(points[i][0]+center[0],points[i][1]+center[1] , 2, 0, Math.PI * 2, true);
+      ctxE2.closePath();
+      ctxE2.fill();
+	}
+	
+	ctxE2.fillStyle = 'black';
+	ctxE2.beginPath();
+    ctxE2.arc(center[0],center[1] , 4, 0, Math.PI * 2, true);
+    ctxE2.closePath();
+    ctxE2.fill();	
+		
+	
+	for(var i=0; i<points.length - 1; i++){
+	ctxE2.strokeStyle = 'blue';
+	ctxE2.beginPath();
+	var p = perp(points[i],points[i+1]);
+	ctxE2.beginPath();
+	ctxE2.moveTo(p[0]+center[0],p[1]+center[1]);
+	ctxE2.lineTo(p[2]+center[0],p[3]+center[1]);
+	ctxE2.lineTo(p[4]+center[0],p[5]+center[1]);
+	ctxE2.moveTo(p[2]+center[0],p[3]+center[1]);
+	ctxE2.lineTo(p[6]+center[0],p[7]+center[1]);
+	ctxE2.stroke();
+
+	}
+	}
+	
+	e2Draw();
+	
+	function getPoint(points, x,y){
+		for(var i=0; i<points.length; i++){
+			if(Math.sqrt((x-(points[i][0]+center[0]))*(x-(points[i][0]+center[0])) + (y-(points[i][1]+center[1]))*(y-(points[i][1]+center[1]))) < 10){
+				return i;
+			}else{
+			continue	
+			}
+			return null;
+		}
+	
+	}
+	
+	normExample_int = null;
+	e2_md = false;
+	e2point = null;
+	cE2.onmousedown = function(e){
+		e2_md = true;
+		var rect = cE2.getBoundingClientRect();
+		var x = e.clientX - rect.left, y = e.clientY - rect.top;
+		console.log(x+':'+y+' - click');
+		e2point = getPoint(points, x, y);
+		normExample_int = setInterval(function(){e2Draw();},1000/30);	
+		
+	};
+	
+	cE2.onmouseup = function(e){
+		e2_md = false;
+		e2point = null;
+		clearInterval(normExample_int);
+		normExample_int = null;
+	}
+	
+	cE2.onmousemove = function(e){
+		if(e2_md && typeof e2point !=='undefined'){
+			
+		var rect = cE2.getBoundingClientRect();
+		var x = e.clientX - rect.left, y = e.clientY - rect.top;
+		console.log(x+':'+y+' - move');
+		if(e2point == 0 || e2point == points.length-1 ){
+			points[0] = [x - (cE2.width*0.5), y - (cE2.height*0.5)];
+			points[points.length-1] = [x - (cE2.width*0.5), y - (cE2.height*0.5)];
+		}else{
+		points[e2point] = [x - (cE2.width*0.5), y - (cE2.height*0.5)];
+		}
+		};
+	}
+};
+
 
 
 </script>
-<p>This is a SUPER simplified model, which works if the two objects faces are perfectly aligned and thats something that is kinda weak for what we are looking to do.  So what happens when its a polygonal shape or a off angle square?  Also its time to start setting up a unit of mesure for everything so we can establish distance. Back to the drawing boards.</p>     
-<p><img style="float: right; margin: 0px 0px 15px 15px;" src="./imgs/e2.jpg" />
-This is where the method for seaperating axes comes into play.  If you look at our diagram on the right you will see two polygons.  Both of these shapes are called as <b>Convex</b> Shapes.  A Convex shape is any polygon that can be defined by a set of points, that if you were to draw a straight line anywhere on the shape from one point to anouther on the polygon, the line will never travel outside of the shape. Anyways these two Convex polygons are in a non intersecting state.
-The value for the seperation is positive and so we know that the shapes are not touching, if it was negitive the shapes would be overlapping and if it was 0 the shapes are just touching.
 
-<br style="clear: both;" /></p>  
-     
+
      
  </div>    
 
