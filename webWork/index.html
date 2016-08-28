@@ -24,7 +24,8 @@
    <span><a href='#start'>Getting Started</a></span>&nbsp;|&nbsp;
    <span><a href='#part-1'>Part I</a></span>&nbsp;|&nbsp;
    <span><a href='#part-2'>Part II</a></span>&nbsp;|&nbsp;
-   <span><a href='#part-3'>Part III</a></span>
+   <span><a href='#part-3'>Part III</a></span><BR />
+   <span><a href='#part-4'>Part IV</a></span>
    </div>
    </div>
    <div class="body">
@@ -558,6 +559,9 @@ if (window.Worker) {
     		},1000/30);
 ...</xmp></pre>
 <p>If your following along and have everything set up correct, when you refresh the page the ball should now drop like graviity is being applied to it.  This set the stage for us to start making some more dynamic effects,  the things we have to consider now is how we are going to handle our Collison detetions.  The most simple model will be for us to use a projection and impulse system where we test if our object is going to collide find out the position where this is happening and then modify our velocity and position to stop the objects from penitrating.  We will keep the model simple, but will include things like restitution and friction.</p>
+</div>
+<div class='section' id='part-4' title='Part IV'>
+     <h3>Collisions, Collision, COLLISIONS!</h3>
 <p>How does one actually do a collision test?  Well in concept it is easy, first you have to establish what kind of collisons you need to calculate for, are they simple shapes like rectangles and cirlces only?  Are the axes of the rectangles always the same?  What kind of shapes we need to test will decide our approch.  For this model we need to track at least circles and off axis rectangles.  I want to include off angle rectangles even though the paddle will never change its angle, because there may be a reason to place other objects in the scene that do not have flat axial value.  Oh man, I just realized how quickly this is becoming a math lesson... my bad, anyways to achive our goals lets first go over some vocabulary.  Also for these examples I am writing them out for any length vector, which is useful in normal situations but with how we are storing our stuff it might not be the best idea.  So I have one of two options, pass more variables that are standard vec2's and numbers instead of our vec3 that has rotation with it as well, or redo these functions to only handle 2 units of the vector we hand it.  The smartest I think would be to follow convention, and drop the vec3 that we were using and have a seperate value for the rotation so that way when we do our vector calculations they are correct.</p>
 <ul>
 <li id='normalization'><h3>normalization</h3><div>Normalizing a vector is scaling it so that its length totals 1. To normalize the vector, we divide each of its components by the length of the vector: </div>
@@ -588,7 +592,7 @@ return t;
 </li>
 
 
-<li id='projection'><h3>Projection</h3><div>A formula to find the shortest length vector that an object must travel to be out of the collision and using this to detect if a object is collided or not.</div>
+<li id='projection'><h3>projection </h3><div>A formula to find the shortest length vector that an object must travel to be out of the collision and using this to detect if a object is collided or not.</div>
 <div>
 <pre title='projection function'><xmp>function project(a, b){
 var proj = new Array(a.length);
@@ -615,16 +619,92 @@ return dot(rN,lN);
 </div>
 </li>
 </ul>
-<p>With these basic functions we are going to be able to run a whole array of 2d comparisons.</p>
+<p>With these basic functions we are going to be able to run a whole array of 2d comparisons. So to solve our 2D overlap test using a series of One Dimensonal Tests. each query tests if the two shapes overlap along a given axis. If one of the Axes we test fails then we know that the objects are not intersecting, and we can stop our test to save on overhead.  If we run a test and find that the objects overlap along all of the possible axes, they are definitely overlapping each other.  From this point we need to figure out the projection vector, which we will use to seperate the objects. </p>
+<p>The last step would be to find which axis has the smallest amount of overlap between the two objects.  The "Push" we are looking for or the projection vector is the same as the axis direction with the length of the projection vector equal to the size of the overlap.  To acomplish this we need to know first the position of the object and all of its axes, along with our target object and the same.  But Wait? What about circles, or triangles or or... ok fine lets do some drawings.</p>
+<h3>Separating Axis Theorem</h3>
+<p><img style="float: right; margin: 0px 0px 15px 15px;" src="./imgs/e1.jpg" />
+In 2D games to represent moving objects we make an axis-aligned bounding box, or AABB. An AABB is defined by a position and two vectors xw and yw that represent half width of the object.  The concept is the same as testing the radius of circle, but these are aligned to the world axis and are then defined in a specific direction.
+Well that all sounds cool... but how does it work?  I think maybe the simplest way will be to make a real quick mock up canvas for you.  After the first example, we will go over more shapes and the methods for testing them.  I know this was supposed to be a webworker tutorial, but for real though we need something decently intensive to even have a nessesity for them.  Collision testing I think meets that bill, so please stay with me or skip ahead.
+<br style="clear: both;" /></p>
+
+<p>In the next example what we will see happen when you click run, is the red box should move to the right and once it collides with the other box well start it all over.</p>     
+ <canvas id='hit-example-1' width='960px' height="200px" style="background:white"></canvas>  
+ <center><a href='#' onclick="start_E1();">RUN!</a></center>
+ <script>
+window.onload = function(){
+ var b1 = {
+ 	pos : [50,100],
+	size : [100,100]
+ },
+ b2 = {
+	pos : [800,100],
+	size : [50,150] 
+ };
+ example1_int = null;
+ cE1 = document.getElementById('hit-example-1'); //Lets make it Global ^_^
+var ctxE1 = cE1.getContext('2d');
+ctxE1.fillStyle = 'red';
+ctxE1.fillRect(b1.pos[0]-(b1.size[0]*0.5),b1.pos[1]-(b1.size[1]*0.5),b1.size[0],b1.size[1]);
+ctxE1.fillStyle = 'blue';
+ctxE1.fillRect(b2.pos[0]-(b2.size[0]*0.5),b2.pos[1]-(b2.size[1]*0.5),b2.size[0],b2.size[1]);
+
+function AABB(a,b){
+if(a.pos[0]+(a.size[0]*0.5) > b.pos[0] - (b.size[0]*0.5)){
+	return true;	
+}else{
+return false;	
+}
+	
+}
+
+start_E1 =  function(){
+	if(example1_int){
+	clearInterval(example1_int);
+	example1_int = null;
+	}else{
+	example1_int = setInterval(function(){run_E1();},1000/30);
+	}
+}
+var b1Speed = 0.0;
+function run_E1(){
+	
+	ctxE1.clearRect(0, 0, cE1.width, cE1.height);
+	if(AABB(b1,b2)){
+	b1.pos[0] = 50;
+	b1Speed = 0;
+	}else{
+	b1.pos[0]+=b1Speed;
+	b1Speed += 0.5;
+	}
+	ctxE1.fillStyle = 'red';
+	ctxE1.fillRect(b1.pos[0]-(b1.size[0]*0.5),b1.pos[1]-(b1.size[1]*0.5),b1.size[0],b1.size[1]);
+	ctxE1.fillStyle = 'blue';
+	ctxE1.fillRect(b2.pos[0]-(b2.size[0]*0.5),b2.pos[1]-(b2.size[1]*0.5),b2.size[0],b2.size[1]);
+}
 
 
+
+}
+
+
+</script>
+<p>This is a SUPER simplified model, which works if the two objects faces are perfectly aligned and thats something that is kinda weak for what we are looking to do.  So what happens when its a polygonal shape or a off angle square?  Also its time to start setting up a unit of mesure for everything so we can establish distance. Back to the drawing boards.</p>     
+<p><img style="float: right; margin: 0px 0px 15px 15px;" src="./imgs/e2.jpg" />
+This is where the method for seaperating axes comes into play.  If you look at our diagram on the right you will see two polygons.  Both of these shapes are called as <b>Convex</b> Shapes.  A Convex shape is any polygon that can be defined by a set of points, that if you were to draw a straight line anywhere on the shape from one point to anouther on the polygon, the line will never travel outside of the shape. Anyways these two Convex polygons are in a non intersecting state.
+The value for the seperation is positive and so we know that the shapes are not touching, if it was negitive the shapes would be overlapping and if it was 0 the shapes are just touching.
+
+<br style="clear: both;" /></p>  
+     
+     
+ </div>    
 
 </div>
-
-
 </div>
-</div>
-   <div class="footer"></div>
+   <div class="footer">
+   <h5>Refrences:</h5>
+   <a href='http://www.geometrictools.com/Documentation/MethodOfSeparatingAxes.pdf' target="_blank">MethodOfSeparatingAxes.pdf</a>
+   
+   </div>
 </div>
 </body>
 </html>
