@@ -149,7 +149,8 @@ height: calc(1em + 1px);
 <p>Specular Color is the color of the highlights from the scenes lights.</p>
 </p>
 <p>These are your general settings for the Basic Material, there are texture settings as well but we will skip over them because for the most part the basic material we are not going to have any use for in our project.  The reason I bring it up was to demonstrate how babylon renders materials otherwise known as a shader.  If you wish to learn more about the basics of materials go <a href='http://doc.babylonjs.com/tutorials/Materials' target="_blank">HERE</a>.  What is happening when we set the different properties of this material, we are changing some variables on the shader that is outputting the object in our GL environment.  This is important because it will serve as the basis for how we produce our procedural content.  The shaders that we create will then be used on various 2d blocks and reference their global UV position, that we then run through some noise calculations to get the output we want.</p>
-<p>So now its about time to bring in Canvas2D.  The reason I am choosing to do this, is it will be easier to troubleshoot what is going on in a 2D enviroment.  Also while working on this I want to have our results take up the whole canvas</p>
+<p>So now its about time to bring in Canvas2D.  The reason I am choosing to do this, is it will be easier to troubleshoot what is going on in a 2D enviroment.  Also while working on this I want to have our results take up the whole canvas.</p>
+<center><span class='cwrap' id="matwrap2"><canvas id='materials2' class='bjsCvas'></canvas></span><span class='controls' id='mat-controls2'></span></center>
 </div>
 
 
@@ -200,7 +201,6 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
 //END EXAMPLE 1
 
-//ALL THE BJS STUFF
 //EXAMPLE 2 SETTING UP =>
       var c2 = document.querySelector("#materials");
       var e2 = new BABYLON.Engine(c2, true);
@@ -432,11 +432,55 @@ var specularBlueSlide = ui.Create(GUI.slider,{title:'s-blue', min:0, max:1, step
       
       
 //END EXAMPLE 2
+//START EXAMPLE 3
+      var c3 = document.querySelector("#materials2");
+      var e3 = new BABYLON.Engine(c3, true);
+    
+      
+      // -------------------------------------------------------------
+      var createScene = function () {
+         var scene = new BABYLON.Scene(e3);
+         scene.clearColor = new BABYLON.Color3(0.35, 0.2, 0.35);
+
+         var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+         camera.setTarget(BABYLON.Vector3.Zero());
+        // camera.attachControl(c2, false);
+
+         var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+         light.intensity = .5;
+
+         basic_material = new BABYLON.StandardMaterial("Basic_Mat", scene);
+ 
+  		var createCvas = function (scene) {
+    	var canvas = new BABYLON.ScreenSpaceCanvas2D(scene, {
+        id: "ScreenCanvas",
+        size: new BABYLON.Vector2(c3.width, c3.height),
+        backgroundFill: "#4040408F",
+        backgroundRoundRadius: 50,
+        children: []
+    	});
+    	return canvas;
+		};
+		
+		firstCvas = createCvas(scene);
+        
+         return scene;
+      };
+      // -------------------------------------------------------------
+      var s3 = createScene();
+      e3.runRenderLoop(function () {
+         s3.render();
+      });
+
+
+
+//END EXAMPLE 3
 
       // Watch for browser/canvas resize events
       window.addEventListener("resize", function () {
          e1.resize();
 		  e2.resize();
+		  e3.resize();
       });
 
 });
