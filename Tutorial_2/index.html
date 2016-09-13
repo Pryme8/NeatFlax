@@ -1,0 +1,426 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>As we Procedural</title>
+
+<style>
+@import 'https://fonts.googleapis.com/css?family=Roboto';
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-size:18px;
+    font-family: 'Roboto', sans-serif;
+  }
+ 
+  .pwrap{
+        display:block;
+        position:relative;
+        width:900px;
+        min-height:100%;
+        height:auto;
+        margin-left:50%;
+        padding-bottom:1.5em;
+         top:0;
+         transform:translateX(-50%);
+  }
+ 
+  .cwrap{
+  display:inline-block;
+  position:relative;
+  width:600px;
+  height:600px;
+  border:1px solid #444;
+  }
+
+  .bjsCvas {
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+ 
+  .controls{
+    display: inline-block;
+    vertical-align: top;
+    padding-left: 1em;
+  }
+ 
+  .foot{
+    display:block;
+    background:#444;
+    position:relative;  
+    width:100%;
+    height:340px;
+  }
+ 
+ 
+  .pUI{
+    background-color:rgba(90, 50, 90, 0.8);
+    min-height:1em;
+    border: 1px solid rgb(20, 50, 100);
+    font-size:12px;
+      }
+ 
+  .pUI input{
+display: inline-block;
+width: calc(25% - 2px);
+margin: 0;
+padding: 0;
+vertical-align: bottom;
+margin-bottom: -1px;
+height: calc(1em + 1px);
+    }
+  .pUI .input-wrap{
+   text-align: right;
+    white-space: nowrap;
+  }
+   .pUI .input-wrap::before{
+      display: block;
+      position: relative;
+   content: attr(title);
+   text-align: left;
+     margin: 0.1em;
+     margin-bottom: -0.1em;
+     color:white;
+    }
+
+.slider-wrap{
+  display: inline-block;
+  position:relative;
+  width:calc(75% - 0.2em - 1px);
+  height: calc(1em + 0.2em - 2px);
+  cursor: pointer;
+  vertical-align: bottom;
+  border: 1px solid #fff;
+}
+
+.slider-wrap span{
+    position:absolute;
+    display:block;
+    height:100%;
+    background:#444;
+    pointer-events:none;
+}
+
+.pUI .label{
+  margin-bottom: 0em;
+  line-height: 1.2em;
+  color:#eee;
+  border-bottom: 1px solid #aaa;
+  background: rgba(0,0,0,0.1);
+  font-weight: bold;
+  letter-spacing: 0.1em;
+}
+
+.pUI hr{
+  margin-bottom: 0;
+}
+</style>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+<script type="text/javascript" src="http://cdn.babylonjs.com/2-1/babylon.js"></script>
+</head>
+<body>
+<div class="pwrap">
+<h1>WebGL and Procedural Textures</h1>
+<hr />
+<h2>Intro...</h2>
+<p>Lets keep this simple, screw texture sampling... Point blank who has the time to create textures, and sample stuff and blah blah blah.  Not me...  its 2016 I’m pretty sure there are ways to make the computer be the artist.  So with all the other projects and things I have been developing it is time to introduce dun dun dun BABYLON JS.  Ok, In my past examples I interacted with the canvas with only webworkers or a single thread;  now it is time to introduce the GL pipeline and the quickest way to do that will be to use a library for handling all of the webGL communication.  My engine of choice is Babylon.js for many many reasons, if you're not familiar with BJS then please do a quick google search and be prepared to be amazed (especially if you're from unity).  I know I know, some of you are prolly slightly intimidated by the idea of programing a texture, but if you follow along with me on this well cover all the basics and get things rolling!  DISCLAIMER*  Um, I've never done this before... so this is all theory until tested, I have a broad understanding of both GLSL and Babylon Pipeline so after sleeping on it last night I think i connected all the dots.</p>
+<p>So first to get started let's go over some basics.  In Babylon JS we have a nifty little method for doing 2d elements called Canvas2D.  This will be our access point for getting what we want to display on the screen, even though we are basically looking to generate a 2d image using the GLSL pipeline the way that we will be constructing it will let us later use it in a 3d environment or object in the same manner.  Again for simplicity in these examples all I will be doing in Canvas2D is making a single box that covers the whole scene and then renders whatever procedural texture we have created to it. </p>
+<hr />
+<h2>Step 1 - Setting up</h2>
+<p>The very first thing to do is get our BJS scene up and running, to do this if you're not familiar with the process or just want a good time saver you can basically copy and paste the code from: <a href='http://doc.babylonjs.com/tutorials/Creating_a_Basic_Scene' target="_blank">HERE</a> and save that as a new index.html page somewhere.  I will be doing everything on this tutorial inline, so if you ever get stumped you can just view the source of this page.  I will also be getting my BJS library from the CDN at http://cdn.babylonjs.com/2-1/babylon.js</p>
+<center><div class='cwrap'><canvas id='setup' class='bjsCvas'> </canvas></div></center>
+<p>If you have webGL you should see the above scene, as a plane with a ball sitting on it... if you don't then you're in the <a href='https://www.google.com/search?q=web+gl+not+working&ie=utf-8&oe=utf-8' target="_blank">wrong place</a></p>
+<hr />
+<h2>Step 2 - Canvas2D and Basic Materials</h2>
+<p>Ok, now that we have our engine up and running, let's get the main part of the script tailored to be more of a suitable environment for what we are trying to do.  What I need to do is create a new canvas 2D Box that will occupy the screen space and be what we output all of our textures to.  We will first go over what basic materials are at our disposal and what some of their effects are, to demonstrate this we will keep our first scene but let's add a standard material to the sphere and a gui to change all the options.</p>
+<center><span class='cwrap' id="matwrap"><canvas id='materials' class='bjsCvas'></canvas></span><span class='controls' id='mat-controls'></span></center>
+</div>
+<div class="foot"></div>
+<script>
+document.addEventListener( 'DOMContentLoaded', function () {
+//ALL THE BJS STUFF
+//EXAMPLE 1 SETTING UP =>
+ // Get the canvas element from our HTML below
+      var c1 = document.querySelector("#setup");
+      // Load the BABYLON 3D engine
+      var e1 = new BABYLON.Engine(c1, true);
+      // -------------------------------------------------------------
+      // Here begins a function that we will 'call' just after it's built
+      var createScene = function () {
+         // Now create a basic Babylon Scene object
+         var scene = new BABYLON.Scene(e1);
+         // Change the scene background color to green.
+         scene.clearColor = new BABYLON.Color3(0.35, 0.2, 0.35);
+         // This creates and positions a free camera
+         var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+         // This targets the camera to scene origin
+         camera.setTarget(BABYLON.Vector3.Zero());
+         // This attaches the camera to the canvas
+        // camera.attachControl(c1, false);
+         // This creates a light, aiming 0,1,0 - to the sky.
+         var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+         // Dim the light a small amount
+         light.intensity = .5;
+         // Let's try our built-in 'sphere' shape. Params: name, subdivisions, size, scene
+         var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
+         // Move the sphere upward 1/2 its height
+         sphere.position.y = 1;
+         // Let's try our built-in 'ground' shape. Params: name, width, depth, subdivisions, scene
+         var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
+         // Leave this function
+         return scene;
+      }; // End of createScene function
+      // -------------------------------------------------------------
+      // Now, call the createScene function that you just finished creating
+      var s1 = createScene();
+
+      // Register a render loop to repeatedly render the scene
+      e1.runRenderLoop(function () {
+         s1.render();
+      });
+
+
+//END EXAMPLE 1
+
+//ALL THE BJS STUFF
+//EXAMPLE 2 SETTING UP =>
+      var c2 = document.querySelector("#materials");
+      var e2 = new BABYLON.Engine(c2, true);
+    
+      
+      // -------------------------------------------------------------
+      var createScene = function () {
+         var scene = new BABYLON.Scene(e2);
+         scene.clearColor = new BABYLON.Color3(0.35, 0.2, 0.35);
+
+         var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+         camera.setTarget(BABYLON.Vector3.Zero());
+        // camera.attachControl(c2, false);
+
+         var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+         light.intensity = .5;
+
+         sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene); //Im making this global so we can refrence it easy... this is not ideal but its quick for this example.
+         sphere.position.y = 1;
+         //Create the material we will be using, the standard way would be the way commented out below but because we are just using it right away Im going to declaire it on the mesh itself.
+         //var mat = new BABYLON.StandardMaterial("Basic_Mat", scene);
+         sphere.material = new BABYLON.StandardMaterial("Basic_Mat", scene);
+        
+         var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
+        
+         return scene;
+      };
+      // -------------------------------------------------------------
+      var s2 = createScene();
+      e2.runRenderLoop(function () {
+         s2.render();
+      });
+
+    
+    GUI = function(id, args, scene, engine){
+        this.id = id || 'UI_' + document.getElementsByClassName('pUI').length;
+        this.args = args || {};
+        this._target = document.getElementById(this.args.target) || document.body;
+        
+        if(typeof scene !== 'object' || typeof engine !== 'object'){return};
+        this.DOM = [];
+        
+        this.mainBlock = document.createElement('div');
+        this.mainBlock.setAttribute('id', this.id);
+        this.mainBlock.setAttribute('class', 'pUI');
+        
+        
+        if(typeof this.args.width !== 'undefined'){
+                this.mainBlock.style.width = this.args.width;
+        }
+        if(typeof this.args.height!== 'undefined'){
+                this.mainBlock.style.height = this.args.height;
+        }
+        if(typeof this.args.position == 'string'){
+                this.mainBlock.style.position = this.args.position;
+        }else{
+                this.mainBlock.style.position = 'absolute';
+        }
+        
+        this._target.appendChild(this.mainBlock);
+                
+        return this;
+    };
+    
+    GUI.prototype.Create = function(type, args){
+        args = args || {};
+        var newElement = new type(this,args);
+        this.DOM.push(newElement);
+        return newElement;
+    
+    };
+    
+    GUI.breakline = function(parent, args){
+        var hr = document.createElement('hr');
+        parent.mainBlock.appendChild(hr);
+        return hr;
+    };
+    GUI.label = function(parent, args){
+        var label = document.createElement('div');
+        label.innerHTML = args.text || "New-Label";
+        label.setAttribute('class', 'label');
+        parent.mainBlock.appendChild(label);        
+        return label;
+    };
+    
+    
+    GUI.input = function(parent, args){
+        args = args || {};
+        args.wrap = args.wrap || {};
+        this.wrap = args.wrap || {};
+        this.wrap.type = args.wrap.type || 'div';
+        this.parent = parent;
+        var self = this;
+        if(this.wrap.type !== 'span' && this.wrap.type !== 'div'){this.wrap.type = 'div'};
+        this.wrap.obj = document.createElement(this.wrap.type);
+        this.obj = document.createElement('input');
+        this.id = args.title || 'Input'+ document.getElementsByClassName('pIn').length;
+        this.obj.setAttribute('id', this.id);
+        this.wrap.obj.appendChild(this.obj);
+        this.parent.mainBlock.appendChild(this.wrap.obj);    
+        this.wrap.obj.setAttribute('class', 'input-wrap pIn');    
+        this.wrap.obj.setAttribute('title', this.id);
+        this.obj.setAttribute('value', args.value || '');
+        if(typeof args.min != 'undefined'){
+            this.min = args.min;
+        this.obj.setAttribute('min', args.min);    
+        }
+        if(typeof args.max != 'undefined'){
+            this.max = args.max;
+        this.obj.setAttribute('max', args.max);    
+        }
+        if(typeof args.step != 'undefined'){
+            this.step = args.step;
+        this.obj.setAttribute('step', args.step);    
+        }
+        
+        
+        return this;
+    };
+    
+
+    
+
+    
+    GUI.slider = function(parent, args){        
+        GUI.input.call(this, parent, args);    
+        this.wrap.obj.innerHTML = '<div class="slider-wrap"><span id="slider-wrap-'+this.id+'"></span></div>'+this.wrap.obj.innerHTML;
+        this.slide = document.getElementById('slider-wrap-'+this.id);
+        document.getElementById(this.id).type = 'number';
+        this._update();
+        var self = this;
+        document.getElementById(this.id).onchange = function(){
+            self._update();
+        };
+        
+        this.slide.parentNode.onclick = function(e){
+            var t = e.target;
+            var tsize = t.getBoundingClientRect();
+            var X = e.pageX - tsize.left;
+            var p = X/tsize.width;
+            var value = self.max*p;
+            console.log(value.toFixed(2));
+            document.getElementById(self.id).value = value.toFixed(2);
+            self._update();            
+        };
+            
+        return this;
+    };
+    
+    GUI.slider.prototype.constructor = GUI.slider;
+    
+    GUI.slider.prototype._update = function(){
+        this.value = document.getElementById(this.id).value;
+        //console.log(currentVal);
+        var p = this.max/this.value;
+        p = ((this.wrap.obj.getElementsByClassName("slider-wrap")[0].getBoundingClientRect()).width-2)/p;
+        this.slide.style.width = p+'px';
+            
+        if(typeof this.callback === 'function'){
+            this.callback(this);
+        }
+    };
+    
+
+//Now use our GUI we made.
+var ui = new GUI('Mat-UI',{target:'mat-controls', width:'200px', position:'relative'},s2,e2);
+
+var alphaSlide = ui.Create(GUI.slider,{title:'alpha', min:0, max:1, step:0.01, value:1});
+    alphaSlide.callback = function(self){
+        sphere.material.alpha = self.value;
+    };
+    ui.Create(GUI.breakline);
+    ui.Create(GUI.label, {text:'diffuseColor'});
+var diffuseRedSlide = ui.Create(GUI.slider,{title:'d-red', min:0, max:1, step:0.01, value:1});
+    diffuseRedSlide.callback = function(self){
+        sphere.material.diffuseColor.r = self.value;
+    };
+var diffuseGreenSlide = ui.Create(GUI.slider,{title:'d-green', min:0, max:1, step:0.01, value:1});
+    diffuseGreenSlide.callback = function(self){
+        sphere.material.diffuseColor.g = self.value;
+    };
+var diffuseBlueSlide = ui.Create(GUI.slider,{title:'d-blue', min:0, max:1, step:0.01, value:1});
+    diffuseBlueSlide.callback = function(self){
+        sphere.material.diffuseColor.b = self.value;
+    };
+    ui.Create(GUI.breakline);
+    ui.Create(GUI.label, {text:'emissiveColor'});
+var emissiveRedSlide = ui.Create(GUI.slider,{title:'e-red', min:0, max:1, step:0.01, value:1});
+    emissiveRedSlide.callback = function(self){
+        sphere.material.emissiveColor.r = self.value;
+    };
+var emissiveGreenSlide = ui.Create(GUI.slider,{title:'e-green', min:0, max:1, step:0.01, value:1});
+    emissiveGreenSlide.callback = function(self){
+        sphere.material.emissiveColor.g = self.value;
+    };
+var emissiveBlueSlide = ui.Create(GUI.slider,{title:'e-blue', min:0, max:1, step:0.01, value:1});
+    emissiveBlueSlide.callback = function(self){
+        sphere.material.emissiveColor.b = self.value;
+    };
+    ui.Create(GUI.breakline);
+    ui.Create(GUI.label, {text:'ambientColor'});
+var ambientRedSlide = ui.Create(GUI.slider,{title:'a-red', min:0, max:1, step:0.01, value:1});
+    ambientRedSlide.callback = function(self){
+        sphere.material.ambientColor.r = self.value;
+    };
+var ambientGreenSlide = ui.Create(GUI.slider,{title:'a-green', min:0, max:1, step:0.01, value:1});
+    ambientGreenSlide.callback = function(self){
+        sphere.material.ambientColor.g = self.value;
+    };
+var ambientBlueSlide = ui.Create(GUI.slider,{title:'a-blue', min:0, max:1, step:0.01, value:1});
+    ambientBlueSlide.callback = function(self){
+        sphere.material.ambientColor.b = self.value;
+    };
+    ui.Create(GUI.breakline);
+    ui.Create(GUI.label, {text:'specularColor'});
+var specularRedSlide = ui.Create(GUI.slider,{title:'s-red', min:0, max:1, step:0.01, value:1});
+    specularRedSlide.callback = function(self){
+        sphere.material.specularColor.r = self.value;
+    };
+var specularGreenSlide = ui.Create(GUI.slider,{title:'s-green', min:0, max:1, step:0.01, value:1});
+    specularGreenSlide.callback = function(self){
+        sphere.material.specularColor.g = self.value;
+    };
+var specularBlueSlide = ui.Create(GUI.slider,{title:'s-blue', min:0, max:1, step:0.01, value:1});
+    specularBlueSlide.callback = function(self){
+        sphere.material.specularColor.b = self.value;
+    };
+
+      
+      
+//END EXAMPLE 2
+
+});
+</script>
+</body>
+</html>
+
+
