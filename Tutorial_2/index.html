@@ -136,7 +136,22 @@ height: calc(1em + 1px);
 <h2>Step 2 - Canvas2D and Basic Materials</h2>
 <p>Ok, now that we have our engine up and running, let's get the main part of the script tailored to be more of a suitable environment for what we are trying to do.  What I need to do is create a new canvas 2D Box that will occupy the screen space and be what we output all of our textures to.  We will first go over what basic materials are at our disposal and what some of their effects are, to demonstrate this we will keep our first scene but let's add a standard material to the sphere and a gui to change all the options.</p>
 <center><span class='cwrap' id="matwrap"><canvas id='materials' class='bjsCvas'></canvas></span><span class='controls' id='mat-controls'></span></center>
+<p>Explanation of the settings:
+<h4>Alpha</h4>
+<p>Pretty self explanatory, this affects the overall opacity of the material.</p>
+<h4>Diffuse Color</h4>
+<p>Diffuse Color is referencing the way that light reacts to the object.  This is just like what you would expect, all the colors is white, no colors is black and the scenes lights effect how this looks.</p>
+<h4>Emissive Color</h4>
+<p>Emissive Color is the amount of color the object generates itself, this is independent of the lights in the scene.</p>
+<h4>Ambient Color</h4>
+<p>Ambient Color does not seem to work as of right now in this example >_<...</p>
+<h4>Specular Color</h4>
+<p>Specular Color is the color of the highlights from the scenes lights.</p>
+</p>
+<p>These are your general settings for the Basic Material, there are texture settings as well but we will skip over them because for the most part the basic material we are not going to have any use for in our project.  The reason I bring it up was to demonstrate how babylon renders materials otherwise known as a shader.  If you wish to learn more about the basics of materials go <a href='http://doc.babylonjs.com/tutorials/Materials' target="_blank">HERE</a>.  What is happening when we set the different properties of this material, we are changing some variables on the shader that is outputting the object in our GL environment.  This is important because it will serve as the basis for how we produce our procedural content.  The shaders that we create will then be used on various 2d blocks and reference their global UV position, that we then run through some noise calculations to get the output we want.</p>
 </div>
+
+
 <div class="foot"></div>
 <script>
 document.addEventListener( 'DOMContentLoaded', function () {
