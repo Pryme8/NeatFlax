@@ -144,7 +144,7 @@ height: calc(1em + 1px);
 <h4>Emissive Color</h4>
 <p>Emissive Color is the amount of color the object generates itself, this is independent of the lights in the scene.</p>
 <h4>Ambient Color</h4>
-<p>Ambient Color does not seem to work as of right now in this example >_<...</p>
+<p>Ambient Color is like a secondary diffuse, this one is depends on the scene.ambientColor for its colors.  Think of the scene color as the light hitting the object and the ambient of the object is what it is reflecting.  This blends with the normal diffuse.</p>
 <h4>Specular Color</h4>
 <p>Specular Color is the color of the highlights from the scenes lights.</p>
 </p>
@@ -210,7 +210,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
       var createScene = function () {
          var scene = new BABYLON.Scene(e2);
          scene.clearColor = new BABYLON.Color3(0.35, 0.2, 0.35);
-
+		 scene.ambientColor = new BABYLON.Color3(1, 1, 1);
          var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
          camera.setTarget(BABYLON.Vector3.Zero());
         // camera.attachControl(c2, false);
@@ -413,6 +413,19 @@ var ambientGreenSlide = ui.Create(GUI.slider,{title:'a-green', min:0, max:1, ste
 var ambientBlueSlide = ui.Create(GUI.slider,{title:'a-blue', min:0, max:1, step:0.01, value:1});
     ambientBlueSlide.callback = function(self){
         sphere.material.ambientColor.b = self.value;
+    };
+    ui.Create(GUI.label, {text:'scene.ambientColor'});
+var sambientRedSlide = ui.Create(GUI.slider,{title:'scene-a-red', min:0, max:1, step:0.01, value:1});
+    sambientRedSlide.callback = function(self){
+         scene.ambientColor.r = self.value;
+    };
+var sambientGreenSlide = ui.Create(GUI.slider,{title:'scene-a-green', min:0, max:1, step:0.01, value:1});
+    sambientGreenSlide.callback = function(self){
+         scene.ambientColor.g = self.value;
+    };
+var sambientBlueSlide = ui.Create(GUI.slider,{title:'scene-a-blue', min:0, max:1, step:0.01, value:1});
+   sambientBlueSlide.callback = function(self){
+        scene.ambientColor.b = self.value;
     };
     ui.Create(GUI.breakline);
     ui.Create(GUI.label, {text:'specularColor'});
