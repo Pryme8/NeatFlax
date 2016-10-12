@@ -33,7 +33,18 @@ neat = {
 			keywords : ['Shooter', 'Space', 'Physics', 'Enemies', 'Bullets', 'Collisions', 'Arcade'],
 			sublinks : [  ],
 		
-		}		
+		},
+		{
+			name:"CameraBoom",
+			type:"Playground",
+			url:"http://www.babylonjs-playground.com/#AGOCE#7",
+			author: "Pryme8",
+			email: "Pryme8@gmail.com",
+			desc : "Lerping a Camera on a set path of points without the animation system.",
+			keywords : ['Camera', 'Animation', 'Lerp'],
+			sublinks : [{url:'http://www.babylonjs-playground.com/#AGOCE#9', title:'Alt Example'} ],
+		
+		}			
 	]	
 	
 };
