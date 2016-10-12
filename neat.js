@@ -56,6 +56,18 @@ neat = {
 			sublinks : [{url:'http://www.html5gamedevs.com/topic/21442-mesh_colliders-not-working-correctly/', title:'Forum Thread'},
 					   ],
 		
+		},
+		{
+			name:"Rollercoaster",
+			type:"Playground",
+			url:"http://www.babylonjs-playground.com/#1HH4OJ#13",
+			author: "jerome",
+			email: "",
+			desc : "Example of moving and object on a path",
+			keywords : ['Physics', 'Rigging', 'Paths', 'Lerp'],
+			sublinks : [{url:'http://www.html5gamedevs.com/topic/21591-ive-got-a-transform-riddle-for-you/', title:'Original Question'},
+					   ],
+		
 		}				
 	]	
 	
