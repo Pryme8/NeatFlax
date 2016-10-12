@@ -71,6 +71,23 @@ html, html *, body, body *, *::before, *::after{
 	display:block;
 	min-height:250px;
 	background-color:#826126;
+	color:white;
+	text-shadow:none;
+	
+}
+
+.foot .credit{
+	position:absolute;
+	bottom:1em;
+	right:1em;
+	opacity: 0.5;
+}
+
+.foot .disclaim{
+	line-height: 3em;
+	font-size: 0.8em;
+	opacity: 0.65;
+	font-weight: bold;
 }
 	
 .h-slide{
