@@ -92,7 +92,19 @@ neat = {
 			sublinks : [{url:'http://www.html5gamedevs.com/topic/20775-dna-chain/', title:'Forum Thread'},
 					   ],
 		
-		}					
+		},
+		{
+			name:"BABOOM",
+			type:"Playground",
+			url:"http://www.babylonjs-playground.com/#1MURF7",
+			author: "jerome",
+			email: "",
+			desc : "Solid Particle System.",
+			keywords : ['Paricles'],
+			sublinks : [{url:'http://www.html5gamedevs.com/topic/20057-baboom/', title:'Forum Thread'},
+					   ],
+		
+		}						
 	]	
 	
 };
