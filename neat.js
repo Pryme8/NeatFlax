@@ -80,6 +80,18 @@ neat = {
 			sublinks : [{url:'http://www.html5gamedevs.com/topic/25450-procedural-city-experience/', title:'Forum Thread'},
 					   ],
 		
+		},
+		{
+			name:"DNA_Chain",
+			type:"Demo",
+			url:"http://files.c75.in/pub/demo/babylon-dna/",
+			author: "c75",
+			email: "",
+			desc : "Example of creating and nimating Instances.",
+			keywords : ['DNA', 'Clones', 'Optimization'],
+			sublinks : [{url:'http://www.html5gamedevs.com/topic/20775-dna-chain/', title:'Forum Thread'},
+					   ],
+		
 		}					
 	]	
 	
