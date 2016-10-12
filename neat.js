@@ -68,7 +68,19 @@ neat = {
 			sublinks : [{url:'http://www.html5gamedevs.com/topic/21591-ive-got-a-transform-riddle-for-you/', title:'Original Question'},
 					   ],
 		
-		}				
+		},
+		{
+			name:"Procedural_City_1",
+			type:"Demo",
+			url:"http://www.pixelcodr.com/games/procedural-city/index.html",
+			author: "Temechon",
+			email: "",
+			desc : "A Procedural City Example",
+			keywords : ['Procedural', 'City', 'Urban'],
+			sublinks : [{url:'http://www.html5gamedevs.com/topic/25450-procedural-city-experience/', title:'Forum Thread'},
+					   ],
+		
+		}					
 	]	
 	
 };
