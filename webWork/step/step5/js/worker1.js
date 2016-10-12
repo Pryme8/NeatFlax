@@ -1,6 +1,5 @@
 // Step 3
 var engine = null; //Does not need to be global.
-
 onmessage = function(e) {
 var type = null;
   if(e.data.length){
@@ -11,6 +10,8 @@ var type = null;
 	break;
 	case "AddObj" : engine._addObject(e.data[1]);
 	break;
+	case "input-key-response" : engine._addInputResponse(e.data[1]);
+	break;
 	}
 }
 
@@ -20,14 +21,22 @@ physics = function(data){
 	this.gravity = data[2];
 	this.stack = [];
 	var parent = this;
+	this.stage = data[3];
+	this.inputs = [];
 	this._init = setInterval(function(){parent._run()},1000/30);
 }
+
+physics.prototype._addInputResponse = function(kr){
+	this.inputs.push(kr);
+	console.log(this.inputs);
+};
 
 physics.prototype._run = function(){
 	for(e=0; e<this.stack.length; e++){	
 		if(!this.stack[e].on){continue}
 		
 		var tempCalc = this._calc(this.stack[e]);
+
 		
 		/*
 		var hit = false;
@@ -49,12 +58,13 @@ physics.prototype._run = function(){
 };
 
 physics.prototype._addObject = function(obj){
-	obj.pos = obj.intPos, obj.velocity = obj.intVel;
 	this.stack.push(obj);
 	console.log("Thread "+this._core+": Added Obj - "+obj.id+" to its stack");
 }
 
+
 physics.prototype._hitTest = function(a,b){
+
 
 return false;
 }
@@ -65,14 +75,12 @@ physics.prototype._calc = function(obj){
 		stackID : obj.stackID,
 	};
 	response.newVel = [
-		obj.velocity[0] + (obj.mass * this.gravity[0]), //X
-		obj.velocity[1] + (obj.mass * this.gravity[1]), //Y
-		obj.velocity[2]	// ROTATION
+		obj.body.velocity[0] + (obj.body.mass * this.gravity[0]), //X
+		obj.body.velocity[1] + (obj.body.mass * this.gravity[1]), //Y
 	]
 	response.newPos = [
 		obj.pos[0] + response.newVel[0], //X
 		obj.pos[1] + response.newVel[1], //Y
-		obj.pos[2]	//ROTATION
 	]
 	
 	//console.log(response);
@@ -81,7 +89,7 @@ physics.prototype._calc = function(obj){
 
 physics.prototype._apply = function(calc, id){
 	this.stack[id].pos = calc.newPos;
-	this.stack[id].velocity = calc.newVel;
+	this.stack[id].body.velocity = calc.newVel;
 	postMessage(['apply',calc]);
 }
 

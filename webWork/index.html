@@ -25,7 +25,8 @@
    <span><a href='#part-1'>Part I</a></span>&nbsp;|&nbsp;
    <span><a href='#part-2'>Part II</a></span>&nbsp;|&nbsp;
    <span><a href='#part-3'>Part III</a></span><BR />
-   <span><a href='#part-4'>Part IV</a></span>
+   <span><a href='#part-4'>Part IV</a></span>&nbsp;|&nbsp;
+    <span><a href='#part-45'>Part V</a></span>
    </div>
    </div>
    <div class="body">
@@ -640,9 +641,24 @@ Anouther thing we need to start identifying is the "normal" angle of and edge.  
 <br style="clear: both;" /></p>  
 <p><canvas id='edge-norms' width='600px' height="600px" style="background:white; float: right; margin: 0px 0px 15px 15px;"></canvas>
 I think the easist way to visualize all this is to make some more diagrams... lets see if I can mock up some canvas elements to demonstrate.<BR /> <BR/>
-If you look at the diagram on the right, you will see a Convex Polygon with its center point represented by the black dot.  The red dots are the points of the polygon, the green are the edges and the blue arrows are the normal vector or perpendicular axis to the face.  If you drag one of the polygons you will see that the normal for that face changes.
+If you look at the diagram on the right, you will see a Convex Polygon with its center point represented by the black dot.  The red dots are the points of the polygon, the green are the edges and the blue arrows are the normal vector or perpendicular axis to the face.  If you drag one of the polygons you will see that the normal for that face changes.<BR /><BR />  What we need to establish now is the most extreme points on the polygon.  We do this by simply looping through the points and of the polygon and find the most extreme points, then project the max and min points onto the perpendicular normal lines.  If all of the projections overlap we know we have a contact.  
+<BR /><BR /> To make this simpler to understand lets extend out projection axis for each normal out farther.  If you were to select any of those lines that extend from the face of the edge, you would look at both the current polygon and the opposing one and figure out what points on those polygons are at the min and max points for that projection line.<BR /><BR />
 <br style="clear: both;" />
 </p>
+<p><canvas id='projection-test' width='600px' height="600px" style="background:white; float: right; margin: 0px 0px 15px 15px;"></canvas>
+In the case of projection line a1 we see that the most extreme point on the polygon that falls on that projection axis is the same as the edge itself, both points that make up that edge would have the same value effecivly when projected on that line so our min value for the projection of polygon A to axes A1 is equal to the projection value of point 0 || 1 (remember we go clockwise and when I constructed these I started at the top left).  We then look for the max using the same method and in this instance the max value of polygon A is the projection value of the point between edge a2 and a3, or point 3.  We now know where on this axis the polygon A is located so we do the same to polygon b (still looking at the a1 axis).  When we follow the same process we fine that the min of B is point 1 and the max of B is point 3.  If you remember I diagram on the top this is what we were representing.  You can in your mind draw line from these points to perpedicular the projection axis and you can easily see if the two polygons are overlapping in that instance.  If at any point we discover that any of the axes do not overlap then we do not have to continue our calulations and can then interpolate the response.
+<br style="clear: both;" />
+</p>
+
+<p>Now I can continue to beat this concept into the ground and do a bunch of implementation to show you how we would calculate a whole gambit of physics stuff, but this is supposed to be a web socket tutorial so lets just get back to doing that.</p>
+ </div>    
+<div class='section' id='part-5' title='Part V'>
+     <h3>Back to the Game.</h3>
+<p>Ok I know I was talking all sorts of good stuff about, lets include curved shapes and blah blah... but this is starting to take up way to much time and I have to get back to some other projects.  That means its time to wrap this up.</p>
+<p>We are going to just worry about making the ball bounce around hit the paddle and stay on the stage, get some controls working and output a score.  After that Ill leave it up to you to extend these ideas and make something really cool!</p>    
+<p>First a little bit of restructing is nessirary to make this a little less redundent on our object constructors and make them a little more diverse on their arguments.  Then we will just place the player in the scene and attack some kind of controler to allow the user to have input.  Then we will use the same constructor as to make some walls, but they will only be there as a level constraint.  After we get the walls and the paddle in place we will script a simple version of the hit testing and see if we can get a "bounce" back off the walls with the paddle.  After all that we will add the ball back into the stack, and make sure that we have the hit detection identifying the shapes body and running the approriate tests.</p>
+</div>
+
 <script>
 window.onload = function(){
 //EXAMPLE 1
@@ -843,15 +859,147 @@ function run_E1(){
 		}
 		};
 	}
+
+
+
+stage = {
+	canvas : document.getElementById('projection-test'),
 };
+stage.ctx = stage.canvas.getContext('2d'),
+stage.center = [stage.canvas.width*0.5,stage.canvas.height*0.5];
+
+P1 = {
+	pos : [-100,-100],
+	points : [
+	[-50, -50],
+	[50, -50],
+	[20, 50],
+	[-50, -50],
+	],
+	edgeNames : ['a1','a2','a3']
+	};
+P2 = {
+	pos : [200,100],
+	points : [
+	[-20, -50],
+	[50, -30],
+	[20, 20],
+	[-20, -50],
+	],
+	edgeNames : ['b1','b2','b3']
+	};
+	
+	function reDrawStuff(objs){
+		for(var i=0; i<objs.length; i++){
+			var obj = objs[i];
+				stage.ctx.strokeStyle = 'green';
+				stage.ctx.beginPath();
+				stage.ctx.font = "14px Arial";
+				stage.ctx.textAlign = "center";
+				stage.ctx.moveTo(stage.center[0] + obj.pos[0] + obj.points[0][0], stage.center[1] + obj.pos[1] + obj.points[0][1]);
+			for(var j=1; j<obj.points.length; j++){
+				stage.ctx.lineTo(stage.center[0] + obj.pos[0] + obj.points[j][0], stage.center[1] + obj.pos[1] + obj.points[j][1]);
+				var mx = ((stage.center[0] + obj.pos[0] + obj.points[j-1][0])+(stage.center[0] + obj.pos[0] + obj.points[j][0]))*0.5;
+				var my = ((stage.center[1] + obj.pos[1] + obj.points[j-1][1])+(stage.center[1] + obj.pos[1] + obj.points[j][1]))*0.5;
+				stage.ctx.fillStyle = 'black';
+				stage.ctx.fillText(obj.edgeNames[j-1],mx,my);
+			}	
+				stage.ctx.stroke();
+	
+				stage.ctx.fillStyle = 'red';
+			for(var j=0; j<obj.points.length-1; j++){
+     			 stage.ctx.beginPath();
+     			 stage.ctx.arc(stage.center[0] + obj.pos[0] + obj.points[j][0], stage.center[1] + obj.pos[1] + obj.points[j][1], 1, 0, Math.PI * 2, true);
+      				stage.ctx.closePath();
+      			stage.ctx.fill();
+			}
+		}		
+	};
+	
+	function findCenter(obj){
+		var x = stage.center[0] + obj.pos[0];
+		var y = stage.center[1] + obj.pos[1];
+		var ax = 0, ay=0;
+		for(var p=0; p<obj.points.length-1; p++){
+			ax+= obj.points[p][0];
+			ay+= obj.points[p][1];
+		}
+		
+		ax/=(obj.points.length-1);
+		ay/=(obj.points.length-1);
+		x+=ax;
+		y+=ay;
+		return [x,y];
+	};
+	
+	function drawAxes(obj){
+		for(var i=0; i<obj.points.length-1; i++){
+			var a = obj.points[i], b = obj.points[i+1];
+			var o = [(a[0]+b[0])*0.5, (a[1]+b[1])*0.5];
+			o[0]+= stage.center[0] + obj.pos[0];
+			o[1]+= stage.center[1] + obj.pos[1];
+			var ABx =  b[0] - a[0];
+			var ABy =  b[1] - a[1];
+			var ABLength = Math.sqrt( ABx*ABx + ABy*ABy );
+
+			var NABx = ABx / ABLength;
+			var NABy = ABy / ABLength;
+			// Perpendicular + normalized vector.
+			var aUpX = NABy ;
+			var aUpY = -NABx ;
+			var aDownX = -NABy ;
+			var aDownY = NABx ;
+		
+			var Dx = o[0] + 3000 * aUpX;
+			var Dy = o[1] + 3000 * aUpY;
+			var Dx2 = o[0] + 3000 * aDownX;
+			var Dy2 = o[1] + 3000 * aDownY;
+		    var axis =[Dx2, Dy2, Dx, Dy];
+			stage.ctx.strokeStyle = 'rgba(0,0,100,0.5)';
+			 stage.ctx.beginPath();
+			stage.ctx.moveTo(axis[0],axis[1]);
+			stage.ctx.lineTo(axis[2],axis[3]);
+			stage.ctx.stroke();
+		
+		}
+	}
+	
+	function drawRefrences(a, b){
+		var cA = findCenter(a);
+		var cB = findCenter(b);
+		stage.ctx.fillStyle = 'rgba(0,0,0,0.5)';
+		stage.ctx.beginPath();
+     	stage.ctx.arc(cA[0], cA[1], 2, 0, Math.PI * 2, true);
+      	stage.ctx.closePath();
+      	stage.ctx.fill();
+		stage.ctx.beginPath();
+     	stage.ctx.arc(cB[0], cB[1], 2, 0, Math.PI * 2, true);
+      	stage.ctx.closePath();
+      	stage.ctx.fill();
+		stage.ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+		stage.ctx.beginPath();
+		stage.ctx.moveTo(cA[0],cA[1]);
+		stage.ctx.lineTo(cB[0],cB[1]);
+		stage.ctx.stroke();
+		
+		drawAxes(a);
+		drawAxes(b);
+		
+		
+		
+	};
+
+reDrawStuff([P1, P2]);
+drawRefrences(P1,P2);
 
 
+
+};//END OF DOC LOAD
 
 </script>
 
 
      
- </div>    
 
 </div>
 </div>

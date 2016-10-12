@@ -4,6 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>neatFLAX - Tutorial Center</title>
 <link href="./css/main.css" rel="stylesheet" type="text/css" />
+<script src="./neat.js"></script>
 </head>
 
 <body>
@@ -15,11 +16,11 @@
         	</div>
             <div class="top-menu">
             	<div class="h-menu">
-                <span class="item"><a href="#directory">Tutorials</a></span>
+                <span class="m-item"><a href="#directory">Demos/Playgrounds</a></span>
                 <span>:</span>
-                <span class="item"><a href="#submit">Submit</a></span>
+                <span class="m-item"><a href="#submit">Submit</a></span>
                 <span>:</span>
-                <span class="item"><a href="#contact">Contact</a></span>
+                <span class="m-item"><a href="#contact">Contact</a></span>
                 </div>
             </div>
         </div> 
@@ -30,11 +31,8 @@
         </div>
         </center>
         <hr />
-        <div class='directory'>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
+        <div class='directory' id='directory'>
+
         </div>
         
         </div>
@@ -44,5 +42,10 @@
            
     </div>
 </div>
+<script>
+ document.addEventListener("DOMContentLoaded", function(event) {
+    neat.buildSite();
+  });
+</script>
 </body>
 </html>

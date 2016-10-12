@@ -25,7 +25,7 @@ Entity.prototype.update = function(state) {
 Entity.prototype.draw = function(ctx) {
       ctx.fillStyle = 'black';
       ctx.beginPath();
-      ctx.arc(this.pos[0]+CENTERX , this.pos[1]+CENTERY , 2, 0, Math.PI * 2, true);
+      ctx.arc(this.pos[0]+CENTERX , this.pos[1]+CENTERY , 2*SCALE, 0, Math.PI * 2, true);
       ctx.closePath();
       ctx.fill();
 }
@@ -34,7 +34,7 @@ Ball = function(id, pos) {
       Entity.call(this, id, pos);
 	  this.body = {
 		  type:'circle',
-	  	  radius : SCALE,	
+	  	  radius : 2*SCALE,	
 	  }
 	  this.mass = 1;
 }
@@ -59,6 +59,7 @@ player = function(id, pos) {
 		  [(10 * SCALE)*0.5, -SCALE*0.5], //TR
 		   [-(10 * SCALE)*0.5, SCALE*0.5], //BL
 		  [(10 * SCALE)*0.5, SCALE*0.5] //BR
+		  [-(10 * SCALE)*0.5, -SCALE*0.5], //TL close
 		  ]	
 	  }
 	  this.mass = 0;
