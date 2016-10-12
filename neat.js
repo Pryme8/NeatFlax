@@ -8,7 +8,8 @@ neat = {
 			email: "Pryme8@gmail.com",
 			desc : "A quick example of how to make enemeys chase a target.",
 			keywords : ['Lerp', 'Physics', 'AI', 'Collisions', 'beforeRender', 'Demo'],
-			sublinks : [{url:'http://babylonjs-playground.azurewebsites.net/#1PSHEG%230', title:'playground example'}]
+			sublinks : [{url:'http://babylonjs-playground.azurewebsites.net/#1PSHEG%230', title:'playground example'}],
+			addedOn : new Date('October 12, 2016'),
 		},
 		{
 			name:"TERIABLE",
@@ -21,6 +22,7 @@ neat = {
 			sublinks : [{url:'http://Pryme8.github.io/TERIABLE/infinity.html', title:'Infinite Terrain/Controller'},
 						{url:'http://Pryme8.github.io/Das_Noise', title:'Noise Library'}
 					   ],
+			addedOn : new Date('October 12, 2016'),
 		
 		},
 		{
@@ -32,6 +34,7 @@ neat = {
 			desc : "Simple Arcade Shooter Example.",
 			keywords : ['Shooter', 'Space', 'Physics', 'Enemies', 'Bullets', 'Collisions', 'Arcade'],
 			sublinks : [  ],
+			addedOn : new Date('October 12, 2016'),
 		
 		},
 		{
@@ -43,6 +46,7 @@ neat = {
 			desc : "Lerping a Camera on a set path of points without the animation system.",
 			keywords : ['Camera', 'Animation', 'Lerp'],
 			sublinks : [{url:'http://www.babylonjs-playground.com/#AGOCE#9', title:'Alt Example'} ],
+			addedOn : new Date('October 12, 2016'),
 		
 		},
 		{
@@ -55,6 +59,7 @@ neat = {
 			keywords : ['Physics', 'Rigging', 'Motors', 'Joints'],
 			sublinks : [{url:'http://www.html5gamedevs.com/topic/21442-mesh_colliders-not-working-correctly/', title:'Forum Thread'},
 					   ],
+			addedOn : new Date('October 12, 2016'),
 		
 		},
 		{
@@ -67,6 +72,7 @@ neat = {
 			keywords : ['Physics', 'Rigging', 'Paths', 'Lerp'],
 			sublinks : [{url:'http://www.html5gamedevs.com/topic/21591-ive-got-a-transform-riddle-for-you/', title:'Original Question'},
 					   ],
+			addedOn : new Date('October 12, 2016'),
 		
 		},
 		{
@@ -79,6 +85,7 @@ neat = {
 			keywords : ['Procedural', 'City', 'Urban'],
 			sublinks : [{url:'http://www.html5gamedevs.com/topic/25450-procedural-city-experience/', title:'Forum Thread'},
 					   ],
+			addedOn : new Date('October 12, 2016'),
 		
 		},
 		{
@@ -91,6 +98,7 @@ neat = {
 			keywords : ['DNA', 'Clones', 'Optimization'],
 			sublinks : [{url:'http://www.html5gamedevs.com/topic/20775-dna-chain/', title:'Forum Thread'},
 					   ],
+			addedOn : new Date('October 12, 2016'),
 		
 		},
 		{
@@ -103,6 +111,7 @@ neat = {
 			keywords : ['Paricles'],
 			sublinks : [{url:'http://www.html5gamedevs.com/topic/20057-baboom/', title:'Forum Thread'},
 					   ],
+			addedOn : new Date('October 12, 2016'),
 		
 		}						
 	]	
