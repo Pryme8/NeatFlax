@@ -44,7 +44,19 @@ neat = {
 			keywords : ['Camera', 'Animation', 'Lerp'],
 			sublinks : [{url:'http://www.babylonjs-playground.com/#AGOCE#9', title:'Alt Example'} ],
 		
-		}			
+		},
+		{
+			name:"SimpleMachine",
+			type:"Playground",
+			url:"http://www.babylonjs-playground.com/#IBGBX#1",
+			author: "Pryme8 - with help from RaananW",
+			email: "Pryme8@gmail.com",
+			desc : "Rigging a simple physics set up and restricting joints",
+			keywords : ['Physics', 'Rigging', 'Motors', 'Joints'],
+			sublinks : [{url:'http://www.html5gamedevs.com/topic/21442-mesh_colliders-not-working-correctly/', title:'Forum Thread'},
+					   ],
+		
+		}				
 	]	
 	
 };
