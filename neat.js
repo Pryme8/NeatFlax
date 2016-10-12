@@ -87,7 +87,7 @@ neat = {
 			url:"http://files.c75.in/pub/demo/babylon-dna/",
 			author: "c75",
 			email: "",
-			desc : "Example of creating and nimating Instances.",
+			desc : "Example of creating and animating Instances.",
 			keywords : ['DNA', 'Clones', 'Optimization'],
 			sublinks : [{url:'http://www.html5gamedevs.com/topic/20775-dna-chain/', title:'Forum Thread'},
 					   ],
